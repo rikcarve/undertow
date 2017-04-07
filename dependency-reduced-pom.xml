@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>ch.carve</groupId>
+  <artifactId>untertow</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+  <build>
+    <finalName>undertow</finalName>
+    <plugins>
+      <plugin>
+        <artifactId>maven-shade-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifest>
+              <mainClass>ch.carve.undertow.HelloWorldServer</mainClass>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+  <properties>
+    <undertow.version>1.3.28.Final</undertow.version>
+    <failOnMissingWebXml>false</failOnMissingWebXml>
+    <my.docker.certs>C:/Users/tkdak/.docker/machine/certs</my.docker.certs>
+    <my.docker.host>tcp://192.168.99.100:2376</my.docker.host>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+    <docker.maven.plugin.version>0.20.1</docker.maven.plugin.version>
+  </properties>
+</project>
+
