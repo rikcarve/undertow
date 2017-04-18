@@ -8,7 +8,7 @@ public class DelayedHelloWorldHandler implements HttpHandler {
 
     @Override
     public void handleRequest(HttpServerExchange exchange) throws Exception {
-        Thread.sleep(2000);
+        Thread.sleep(200);
         exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/plain");
         exchange.getResponseSender().send("Hello World delayed");
     }
