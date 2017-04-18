@@ -12,7 +12,7 @@
 		<my.docker.host>tcp://192.168.99.100:2376</my.docker.host>
 		<my.docker.certs>C:/Users/tkdak/.docker/machine/certs</my.docker.certs>
 		<failOnMissingWebXml>false</failOnMissingWebXml>
-		<undertow.version>1.4.11.Final</undertow.version>
+		<undertow.version>1.4.12.Final</undertow.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -27,6 +27,7 @@
 			<version>${undertow.version}</version>
 		</dependency>
  -->
+
 	</dependencies>
 	<build>
 		<finalName>undertow</finalName>
