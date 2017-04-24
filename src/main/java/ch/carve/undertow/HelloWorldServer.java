@@ -1,5 +1,7 @@
 package ch.carve.undertow;
 
+import org.slf4j.LoggerFactory;
+
 import io.undertow.Handlers;
 import io.undertow.Undertow;
 import io.undertow.UndertowOptions;
@@ -7,7 +9,6 @@ import io.undertow.server.HttpHandler;
 import io.undertow.server.handlers.BlockingHandler;
 import io.undertow.server.handlers.MetricsHandler;
 import io.undertow.server.handlers.accesslog.AccessLogHandler;
-import io.undertow.server.handlers.accesslog.JBossLoggingAccessLogReceiver;
 
 public class HelloWorldServer {
 
@@ -26,7 +27,7 @@ public class HelloWorldServer {
 
     private static HttpHandler aggregatedHandler(HttpHandler handler) {
         HttpHandler result = new BlockingHandler(handler);
-        result = new AccessLogHandler(result, new JBossLoggingAccessLogReceiver("accesslog"), "%h %m %U %q %s %Dms", HelloWorldServer.class.getClassLoader());
+        result = new AccessLogHandler(result, new Slf4jAccessLogReceiver(LoggerFactory.getLogger("access-log")), "%h %m %U %q %s %Dms", HelloWorldServer.class.getClassLoader());
         return result;
     }
 }
