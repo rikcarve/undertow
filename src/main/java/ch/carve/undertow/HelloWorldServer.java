@@ -1,6 +1,14 @@
 package ch.carve.undertow;
 
+import java.util.concurrent.TimeUnit;
+
 import org.slf4j.LoggerFactory;
+
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Slf4jReporter;
+import com.codahale.metrics.jvm.GarbageCollectorMetricSet;
+import com.codahale.metrics.jvm.MemoryUsageGaugeSet;
+import com.codahale.metrics.jvm.ThreadStatesGaugeSet;
 
 import io.undertow.Handlers;
 import io.undertow.Undertow;
@@ -13,8 +21,21 @@ import io.undertow.server.handlers.accesslog.AccessLogHandler;
 
 public class HelloWorldServer {
     private static Undertow server = null;
+    static final MetricRegistry metricRegistry = new MetricRegistry();
 
     public static void main(final String[] args) {
+        metricRegistry.register("gc", new GarbageCollectorMetricSet());
+        metricRegistry.register("memory", new MemoryUsageGaugeSet());
+        metricRegistry.register("thread", new ThreadStatesGaugeSet());
+
+        Slf4jReporter reporter = Slf4jReporter.forRegistry(metricRegistry)
+                .outputTo(LoggerFactory.getLogger("metrics"))
+                .convertRatesTo(TimeUnit.SECONDS)
+                .convertDurationsTo(TimeUnit.MILLISECONDS)
+                .build();
+        reporter.start(5, TimeUnit.SECONDS);
+
+        // TODO try to add connector statistic to logger (through attribute)
         DelayedHelloWorldHandler myHandler = new DelayedHelloWorldHandler();
         myHandler.setListenerInfoGetter(HelloWorldServer::getListenerInfo);
         server = Undertow.builder()
@@ -39,14 +60,20 @@ public class HelloWorldServer {
         return new RequestLimitingHandler(5, 1, next);
     }
 
+    private static HttpHandler metrics(HttpHandler next) {
+        return new MetricsHandler(next, metricRegistry);
+    }
+
     private static HttpHandler wrapWithCommonHandlers(HttpHandler handler) {
         return HandlerChainBuilder.begin(BlockingHandler::new)
                 .next(HelloWorldServer::accessLog)
                 .next(HelloWorldServer::limit)
+                .next(HelloWorldServer::metrics)
                 .complete(handler);
     }
 
     private static ListenerInfo getListenerInfo(int index) {
         return server.getListenerInfo().get(index);
     }
+
 }
