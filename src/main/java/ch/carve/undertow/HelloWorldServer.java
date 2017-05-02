@@ -48,6 +48,9 @@ public class HelloWorldServer {
                         .get("/test2", wrapWithCommonHandlers(HelloWorldHandler::handleRequest))
                         .get("/delayed", wrapWithCommonHandlers(myHandler)))
                 .build();
+
+        metricRegistry.register("undertow", new UndertowGaugeSet(server));
+
         server.start();
     }
 
@@ -60,15 +63,10 @@ public class HelloWorldServer {
         return new RequestLimitingHandler(5, 1, next);
     }
 
-    private static HttpHandler metrics(HttpHandler next) {
-        return new MetricsHandler(next, metricRegistry);
-    }
-
     private static HttpHandler wrapWithCommonHandlers(HttpHandler handler) {
         return HandlerChainBuilder.begin(BlockingHandler::new)
                 .next(HelloWorldServer::accessLog)
                 .next(HelloWorldServer::limit)
-                .next(HelloWorldServer::metrics)
                 .complete(handler);
     }
 
