@@ -10,7 +10,7 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <docker.maven.plugin.version>0.20.1</docker.maven.plugin.version>
         <my.docker.host>tcp://192.168.99.100:2376</my.docker.host>
-        <my.docker.certs>C:/Users/tkdak/.docker/machine/certs</my.docker.certs>
+        <my.docker.certs>C:/Users/rik/.docker/machine/certs</my.docker.certs>
         <failOnMissingWebXml>false</failOnMissingWebXml>
         <undertow.version>1.4.12.Final</undertow.version>
         <metrics.version>3.1.0</metrics.version>
@@ -69,6 +69,68 @@
                         </manifest>
                     </archive>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.6.0</version>
+                <configuration>
+                    <mainClass>ch.carve.undertow.HelloWorldServer</mainClass>
+                    <arguments>
+                        <argument>-jar</argument>
+                        <argument>target/${project.build.finalName}.jar</argument>
+                    </arguments>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>io.fabric8</groupId>
+                <artifactId>docker-maven-plugin</artifactId>
+                <version>${docker.maven.plugin.version}</version>
+                <configuration>
+                    <dockerHost>${my.docker.host}</dockerHost>
+                    <certPath>${my.docker.certs}</certPath>
+                    <images>
+                        <image>
+                            <name>rikcarve/${project.artifactId}</name>
+                            <build>
+                                <from>openjdk:8-jre</from>
+                                <ports>
+                                    <port>8080</port>
+                                </ports>
+                                <assembly>
+                                    <mode>dir</mode>
+                                    <basedir>/usr/</basedir>
+                                    <inline>
+                                        <files>
+                                            <file>
+                                                <source>target/${project.build.finalName}.jar</source>
+                                                <outputDirectory>/</outputDirectory>
+                                            </file>
+                                        </files>
+                                    </inline>
+                                </assembly>
+                                <cmd>
+                                    <shell>java -jar
+                                        /usr/${project.build.finalName}.jar</shell>
+                                </cmd>
+                            </build>
+                            <run>
+                                <ports>
+                                    <port>8080:8080</port>
+                                </ports>
+                            </run>
+                        </image>
+                    </images>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>docker:build</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>build</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
 
         </plugins>

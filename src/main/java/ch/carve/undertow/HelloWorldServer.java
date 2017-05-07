@@ -33,14 +33,14 @@ public class HelloWorldServer {
                 .convertRatesTo(TimeUnit.SECONDS)
                 .convertDurationsTo(TimeUnit.MILLISECONDS)
                 .build();
-        reporter.start(5, TimeUnit.SECONDS);
+        reporter.start(30, TimeUnit.SECONDS);
 
         // TODO try to add connector statistic to logger (through attribute)
         DelayedHelloWorldHandler myHandler = new DelayedHelloWorldHandler();
         myHandler.setListenerInfoGetter(HelloWorldServer::getListenerInfo);
         server = Undertow.builder()
                 .setWorkerThreads(25)
-                .addHttpListener(8080, "localhost")
+                .addHttpListener(8080, "0.0.0.0")
                 .setServerOption(UndertowOptions.RECORD_REQUEST_START_TIME, true)
                 .setServerOption(UndertowOptions.ENABLE_STATISTICS, true)
                 .setHandler(Handlers.routing()
