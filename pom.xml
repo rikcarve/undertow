@@ -42,7 +42,11 @@
             <artifactId>logback-classic</artifactId>
             <version>1.2.3</version>
         </dependency>
-
+        <dependency>
+            <groupId>org.elasticsearch</groupId>
+            <artifactId>metrics-elasticsearch-reporter</artifactId>
+            <version>2.2.0</version>
+        </dependency>
     </dependencies>
     <build>
         <finalName>undertow</finalName>
@@ -110,8 +114,7 @@
                                     </inline>
                                 </assembly>
                                 <cmd>
-                                    <shell>java -jar
-                                        /usr/${project.build.finalName}.jar</shell>
+                                    <shell>java -jar /usr/${project.build.finalName}.jar</shell>
                                 </cmd>
                             </build>
                             <run>

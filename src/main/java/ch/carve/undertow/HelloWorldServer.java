@@ -1,18 +1,18 @@
 package ch.carve.undertow;
 
+import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
+import org.elasticsearch.metrics.ElasticsearchReporter;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.Slf4jReporter;
 import com.codahale.metrics.jvm.GarbageCollectorMetricSet;
 import com.codahale.metrics.jvm.MemoryUsageGaugeSet;
 import com.codahale.metrics.jvm.ThreadStatesGaugeSet;
 
 import io.undertow.Handlers;
 import io.undertow.Undertow;
-import io.undertow.Undertow.ListenerInfo;
 import io.undertow.UndertowOptions;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.handlers.BlockingHandler;
@@ -28,16 +28,22 @@ public class HelloWorldServer {
         metricRegistry.register("memory", new MemoryUsageGaugeSet());
         metricRegistry.register("thread", new ThreadStatesGaugeSet());
 
-        Slf4jReporter reporter = Slf4jReporter.forRegistry(metricRegistry)
-                .outputTo(LoggerFactory.getLogger("metrics"))
-                .convertRatesTo(TimeUnit.SECONDS)
-                .convertDurationsTo(TimeUnit.MILLISECONDS)
-                .build();
-        reporter.start(30, TimeUnit.SECONDS);
-
-        // TODO try to add connector statistic to logger (through attribute)
-        DelayedHelloWorldHandler myHandler = new DelayedHelloWorldHandler();
-        myHandler.setListenerInfoGetter(HelloWorldServer::getListenerInfo);
+        // Slf4jReporter reporter = Slf4jReporter.forRegistry(metricRegistry)
+        // .outputTo(LoggerFactory.getLogger("metrics"))
+        // .convertRatesTo(TimeUnit.SECONDS)
+        // .convertDurationsTo(TimeUnit.MILLISECONDS)
+        // .build();
+        // reporter.start(30, TimeUnit.SECONDS);
+        ElasticsearchReporter reporter;
+        try {
+            reporter = ElasticsearchReporter.forRegistry(metricRegistry)
+                    .hosts("localhost:9200")
+                    .index("metrics")
+                    .build();
+            reporter.start(30, TimeUnit.SECONDS);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         server = Undertow.builder()
                 .setWorkerThreads(25)
                 .addHttpListener(8080, "0.0.0.0")
@@ -46,7 +52,7 @@ public class HelloWorldServer {
                 .setHandler(Handlers.routing()
                         .get("/test", HelloWorldHandler::handleRequest)
                         .get("/test2", wrapWithCommonHandlers(HelloWorldHandler::handleRequest))
-                        .get("/delayed", wrapWithCommonHandlers(myHandler)))
+                        .get("/delayed", wrapWithCommonHandlers(new DelayedHelloWorldHandler())))
                 .build();
 
         metricRegistry.register("undertow", new UndertowGaugeSet(server));
@@ -60,18 +66,15 @@ public class HelloWorldServer {
     }
 
     private static HttpHandler limit(HttpHandler next) {
-        return new RequestLimitingHandler(5, 1, next);
+        return new RequestLimitingHandler(25, 1, next);
     }
 
     private static HttpHandler wrapWithCommonHandlers(HttpHandler handler) {
         return HandlerChainBuilder.begin(BlockingHandler::new)
                 .next(HelloWorldServer::accessLog)
                 .next(HelloWorldServer::limit)
+                .next(MdcHandler::new)
                 .complete(handler);
-    }
-
-    private static ListenerInfo getListenerInfo(int index) {
-        return server.getListenerInfo().get(index);
     }
 
 }
