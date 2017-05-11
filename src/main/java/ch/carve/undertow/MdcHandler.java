@@ -1,6 +1,6 @@
 package ch.carve.undertow;
 
-import org.jboss.logging.MDC;
+import org.slf4j.MDC;
 
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
